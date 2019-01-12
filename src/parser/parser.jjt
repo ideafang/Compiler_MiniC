@@ -1,0 +1,807 @@
+/**
+ * JJTree template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ * Author: Fang Honglin(方宏林)
+ * Student Number: 2016012915
+ * Date: 2018.12.30
+ */
+options
+{
+  static = false;
+}
+
+PARSER_BEGIN(parser)
+package parser;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Iterator;
+import util.*;
+import list.*;
+
+public class parser
+{
+  public QTList qtList = new QTList();
+  public NodeList nodeList = new NodeList();
+  public static String s = "";
+  public static int errorNum = 0;
+
+  //测试
+  public static void main(String args [])throws FileNotFoundException
+  {
+//    parser parser = new parser(new FileInputStream("code.c"));
+//    parser.analyzer("code.c");
+//    System.out.println("Reading from file src/test.c :");
+//    File file = null;
+//    InputStream in = null;
+//    file = new File("src/test.c");
+//    try {
+//		in = new FileInputStream(file);
+//	} catch (FileNotFoundException e1) {
+//		// TODO 自动生成的 catch 块
+//		e1.printStackTrace();
+//	}
+//    parser parser = new parser(in);
+//    try
+//    {
+//      SimpleNode n = parser.Start();
+//      n.dump("");
+//      qtList.printQTTable();
+//      //System.out.println("finished success!");
+//    }
+//    catch (Exception e)
+//    {
+//      System.out.println("Oops.");
+//      System.out.println(e.getMessage());
+//    }
+  }
+
+  public int analyzer(String fileName)
+  {
+    s = "";
+    errorNum = 0;
+	yuyi(fileName);
+//	System.out.println(s);
+    try {
+	    FileWriter fw = new FileWriter("analyzer.txt");
+	    fw.write(s);
+	    fw.close();
+    } catch (Exception e) {
+	    // TODO 自动生成的 catch 块
+	    e.printStackTrace();
+    }
+    return errorNum;
+  }
+
+  public void cifa(String fileName)
+  {
+    SimpleCharStream input = null;
+    FileWriter fw = null;
+    FileReader fr = null;
+    try {
+        fw = new FileWriter("cifa.txt");
+        fr = new FileReader(fileName);
+	    input = new SimpleCharStream(fr);
+	} catch (IOException e1) {
+		// TODO 自动生成的 catch 块
+		e1.printStackTrace();
+	}
+	parserTokenManager man = new parserTokenManager(input);
+	Token tk = man.getNextToken();
+	while(tk.kind != 0) {
+	  try {
+			fw.write(tk.kind + " " + tk.image + "\n");
+	  } catch (IOException e) {
+			// TODO 自动生成的 catch 块
+			e.printStackTrace();
+	  }
+	  tk = man.getNextToken();
+	}
+	try {
+	  fr.close();
+	  fw.close();
+	}catch(IOException e) {
+	  // TODO 自动生成的 catch 块
+	  e.printStackTrace();
+	}
+  }
+
+  public void yufa(String fileName)
+  {
+    FileWriter fw = null;
+    FileInputStream in = null;
+    try {
+        fw = new FileWriter("yufa.txt");
+        in = new FileInputStream(fileName);
+	} catch (IOException e1) {
+		// TODO 自动生成的 catch 块
+		e1.printStackTrace();
+	}
+	parser parser = new parser(in);
+	try {
+	  SimpleNode n = parser.Start();
+	  printNode(n, "",  fw);
+	}catch(Exception e) {
+	  System.out.println("Oops.");
+      System.out.println(e.getMessage());
+    }
+    try {
+	  fw.close();
+	  in.close();
+	}catch(IOException e) {
+	  // TODO 自动生成的 catch 块
+	  e.printStackTrace();
+	}
+  }
+
+  public void printNode(SimpleNode n, String prefix, FileWriter fw)
+  {
+    try {
+      fw.write(prefix + n.toString() + "\n");
+      Node[] children = n.children;
+      if (children != null) {
+        for (int i = 0; i < children.length; i++) {
+          SimpleNode n1 = (SimpleNode)children[i];
+          if (n1 != null) {
+            printNode(n1, prefix+" ", fw);
+          }
+        }
+      }
+    }catch(IOException e1) {
+      e1.printStackTrace();
+    }
+  }
+
+  public void yuyi(String fileName)
+  {
+    FileWriter fw = null;
+    FileInputStream in = null;
+    try {
+      fw = new FileWriter("yuyi.txt");
+      in = new FileInputStream(fileName);
+    } catch (IOException e1) {
+		// TODO 自动生成的 catch 块
+		e1.printStackTrace();
+	}
+	parser parser = new parser(in);
+	try {
+	  parser.Start();
+	  parser.printQTList(fw);
+	}catch(Exception e) {
+	  System.out.println("Oops.");
+      System.out.println(e.getMessage());
+    }
+    try {
+	  fw.close();
+	  in.close();
+	}catch(IOException e) {
+	  // TODO 自动生成的 catch 块
+	  e.printStackTrace();
+	}
+  }
+
+  public void printQTList(FileWriter fw)
+  {
+    qtList.printQTTable(fw);
+  }
+}
+
+PARSER_END(parser)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| < "//" (~[ "\n", "\r" ])*
+    (
+      "\n"
+    | "\r"
+    | "\r\n"
+    ) >
+| < "/*" (~[ "*" ])* "*"
+    (
+      ~[ "/" ] (~[ "*" ])* "*"
+    )*
+    "/" >
+}
+
+TOKEN :
+{
+    < CONSTANT: ( <DIGIT> )+("."(< DIGIT>)+)? >
+|   < DIGIT: ["0" - "9"] >
+|   < INTEGER : (< DIGIT >)+ >
+}
+
+TOKEN : /* LITERALS */
+{
+  < INTEGER_LITERAL :
+    < DECIMAL_LITERAL > ([ "l", "L" ])?
+  | < HEX_LITERAL > ([ "l", "L" ])?
+  | < OCTAL_LITERAL > ([ "l", "L" ])? 
+    >
+| < #DECIMAL_LITERAL : [ "1"-"9" ] ([ "0"-"9" ])* >
+| < #HEX_LITERAL : "0" [ "x", "X" ] ([ "0"-"9", "a"-"f", "A"-"F" ])+ >
+| < #OCTAL_LITERAL : "0" ([ "0"-"7" ])* >
+}
+ 
+TOKEN : /* KEYWORDS */
+{
+  
+  < MAIN : "main">
+  | < VOID : "void">
+  | < INT : "int">
+  | < FLOAT: "float" >
+  | < CHAR : "char" >
+  | < DOUBLE : "double" >
+  | < IF:"if">
+  | < ELSE:"else" >
+  | < WHILE:"while" >
+  | < DO : "do" >
+  | < SWITCH : "switch" >
+  | < CASE : "case" >
+  | < BREAK : "break" >
+  | < Default : "default" >
+  | < FOR:"for" >
+  | < RETURN:"return">
+}
+ 
+TOKEN : /* OPERATORS */
+{
+  < PLUS:"+">
+  | < MINUS:"-">
+  | < MULTIPLY:"*">
+  | < DIVIDE:"/">
+  | < EQUAL :"=">
+  | < ZIZENG:"++" >
+  | < ZIJIAN:"--" >
+}
+
+TOKEN : /* RELATIONSHIPOPERATOR */
+{
+	< LT:"<"  >
+  | < LE:"<=" >
+  | < GT:">"  >
+  | < GE:"=>" >
+  | < EQ:"==" >
+  | < NE:"!=" >
+  | < OR : "||" >
+  | < AND : "&&" >
+}
+ 
+TOKEN : /* IDENTIFIERS */
+{
+  < IDENTIFIER :
+    < LETTER >
+    (
+      < LETTER >
+    | < DIGIT >
+    )* >
+  | < #LETTER : [ "_", "a"-"z", "A"-"Z" ] >
+}
+
+TOKEN:
+{
+  < STRING:< SHUANGYIN >< IDENTIFIER >< SHUANGYIN >>
+}
+
+TOKEN:
+{
+  <LP:"(">
+  | <RP:")">
+  | <LM:"[">
+  | <RM:"]">
+  | <LB:"{">
+  | <RB:"}">
+}
+
+TOKEN:
+{
+  < COMMA:"," >
+  | < COLON:":" >
+  | < DANYIN:"'" >
+  | < SHUANGYIN:"\"" >
+  | < DOT:"." >
+}
+
+
+SimpleNode Start():{}{
+  Program()< EOF >{
+    return jjtThis;
+  }
+}
+
+/* 处理程序 */
+void Program():{}{
+  (
+      < VOID >< MAIN >< LP >< RP >(StatementBlock())*
+  )
+}
+
+String type(): {
+  Token tk = null;
+}
+{
+  tk = < INT > { return tk.image; }
+  | tk = < FLOAT > { return tk.image; }
+  | tk = < CHAR > { return tk.image; }
+  | tk = < DOUBLE > { return tk.image; }
+  { return null; }
+}
+
+/* 处理语句块 */
+void StatementBlock():{}{
+  < LB >
+  (
+    statement()
+  )*
+  < RB >
+}
+
+/* 处理语句 */
+void statement():{}{
+  seqStatement()";" //声明语句
+  |  decStatement()";" //赋值语句
+  |  cdlStatement() //条件语句
+  |  loopStatement() //循环语句
+}
+
+/* 处理声明语句 */
+void seqStatement():{
+  String name, type1;
+  Node1 n;
+//  int D = 0;
+}
+{
+  type1 = type() name = Identifier()
+  {
+    // 变量名重复声明处理
+    if (nodeList.isExist(name)) {
+//      System.out.println("变量" + type1 + ":" + name + "已存在，不能重复声明！");
+      s += "变量" + type1 + ":" + name + "已存在，不能重复声明！\n";
+//      out.write("变量" + type1 + ":" + name + "已存在，不能重复声明！" + "\n");
+      errorNum++;
+    }else {
+      n = new Node1(name, type1);
+      nodeList.addNode(n);
+    }
+  }
+  (
+    {
+      n = null;
+      name = null;
+    }
+    "," name = Identifier()
+    {
+      if (nodeList.isExist(name)) {
+        s += "变量" + type1 + ":" + name + "已存在，不能重复声明！\n";
+//      System.out.println("变量" + type1 + ":" + name + "已存在，不能重复声明！");
+//      out.write("变量" + type1 + ":" + name + "已存在，不能重复声明！" + "\n");
+        errorNum++;
+      }else {
+        n = new Node1(name, type1);
+        nodeList.addNode(n);
+      }
+    }
+  )*
+}
+
+/* 处理赋值语句 */
+void decStatement(): {
+  String first, result = null;
+  int D = 0;
+  Token tk;
+}
+{
+  (
+    result = Identifier()
+    {
+      if (!nodeList.isExist(result)) {
+        s += "变量 " + result + " undefined！\n";
+//        System.out.println("变量 " + result + " undefined！");
+//        out.write("变量 " + result + " undefined！" + "\n");
+        errorNum++;
+      }
+    }
+    (
+      < ZIZENG > { qtList.addQTInfo(new QTInfo("+", result, "1", result)); }
+    | < ZIJIAN > { qtList.addQTInfo(new QTInfo("-", result, "1", result)); }
+    | (
+        tk = < EQUAL >
+        first = Expression()
+        {
+          QTInfo qt = new QTInfo(tk.image, first, "_", result);
+          qtList.addQTInfo(qt);
+        }
+      )
+    )
+  )
+  | < ZIZENG > result = Identifier()
+    {
+      qtList.addQTInfo(new QTInfo("+", result, "1", result));
+      if (!nodeList.isExist(result)) {
+        s += "变量 " + result + " undefined！\n";
+        errorNum++;
+      }
+    }
+  | < ZIJIAN > Identifier()
+    {
+      qtList.addQTInfo(new QTInfo("-", result, "1", result));
+      if (!nodeList.isExist(result)) {
+        s += "变量 " + result + " undefined！\n";
+        errorNum++;
+      }
+    }
+}
+
+/* 处理条件语句 */
+void cdlStatement(): { }
+{
+  ifStatement()
+  | switchStatement()
+}
+
+/*if语句*/
+void ifStatement():
+{
+  int quad;
+  Token tk = null;
+  ConditionValue cValue = null;
+  QTInfo qt = null;
+}
+{
+  < IF >< LP >
+  cValue = bool()< RP >
+  {
+    cValue.backpatchTrueChain(QTInfo.size + 1);
+  }
+  StatementBlock()
+  {
+    cValue.backpatchFalseChain(QTInfo.size + 1);
+  }
+  (
+    LOOKAHEAD(1)
+    tk = < ELSE >
+    {
+      if (tk != null) {
+        qt = new QTInfo("J", "_", "_", 0);
+        qtList.addQTInfo(qt);
+      }
+      cValue.backpatchFalseChain(QTInfo.size + 1);
+    }
+    StatementBlock()
+    {
+      if (tk != null) {
+        quad = QTInfo.size + 1;
+        qt.setResult(quad);
+      }
+    }
+  )?
+}
+
+/*switch语句*/
+void switchStatement(): {
+  int quad = 0;
+  ConditionValue cValue = new ConditionValue();
+  Token tk;
+  QTInfo jump;
+  QTInfo falseinfo = null;
+  String first, middle; }
+{
+  < SWITCH > < LP > first = Expression() < RP >
+  < LB >
+  (
+    (
+      < CASE > { quad++; }
+      ( tk = < STRING > | tk = < CONSTANT > )
+      {
+        qtList.addQTInfo(new QTInfo("case",  first, tk.image, QTInfo.size+3));
+        falseinfo = new QTInfo("J", "_", "_", 0);
+        qtList.addQTInfo(falseinfo);
+      }
+      < COLON >
+    )
+    ( statement() )*
+    (
+      < BREAK >";"
+      {
+        jump = new QTInfo("J", "_", "_", 0);
+        cValue.mergeTrue(jump); //等待回填break列
+        qtList.addQTInfo(jump);
+      }
+    )?
+    {
+      falseinfo.setResult(QTInfo.size + 1);
+    }
+  )*
+  (
+    < Default >
+    {
+      if (falseinfo != null) {
+        falseinfo.setResult(QTInfo.size + 1);
+      }
+    }
+    < COLON >
+    ( statement() )*
+    (
+      < BREAK >";"
+      {
+        jump = new QTInfo("J", "_", "_", 0);
+        cValue.mergeTrue(jump); //等待回填break列
+        qtList.addQTInfo(jump);
+      }
+    )?
+  )?
+  < RB >
+  {
+    cValue.backpatchTrueChain(QTInfo.size + 1); //回填break列
+  }
+}
+
+/*处理循环语句*/
+void loopStatement(): { }
+{
+  forStatement()
+  | whileStatement()
+  | dowhileStatement()
+}
+
+/*for循环语句*/
+void forStatement(): {
+  int quad = 0;
+  ConditionValue cValue = null;
+}
+{
+  < FOR >
+  < LP >
+  (
+    ( type() )?
+    decStatement() { quad = QTInfo.size + 1; }
+  )?";"
+  (
+    cValue = bool()
+    {
+      cValue.backpatchTrueChain(QTInfo.size + 1);
+    }
+  )?";"
+  (
+    decStatement()
+  )?
+  < RP >
+  StatementBlock()
+  {
+    qtList.addQTInfo(new QTInfo("J", "_", "_", quad));
+    cValue.backpatchFalseChain(QTInfo.size + 1);
+  }
+}
+
+/* 处理while循环语句 */
+void whileStatement():{
+  int quad;
+  ConditionValue cValue;
+}{
+  < WHILE >< LP >
+  {
+    quad = QTInfo.size + 1;
+  }
+  cValue = bool()
+  < RP >
+  {
+    cValue.backpatchTrueChain(QTInfo.size + 1);
+  }
+  StatementBlock()
+  {
+    QTInfo qt = new QTInfo("J", "_", "_", quad);
+    qtList.addQTInfo(qt);
+    cValue.backpatchFalseChain(QTInfo.size + 1);
+  }
+}
+
+/* do-while循环语句 */
+void dowhileStatement(): {
+  int quad = 0;
+  ConditionValue cValue = null;
+}
+{
+  < DO > { quad = QTInfo.size + 1; }
+  StatementBlock()
+  < WHILE >< LP > cValue = bool() < RP >
+  {
+    cValue.backpatchTrueChain(quad);
+    cValue.backpatchFalseChain(QTInfo.size + 1);
+  }
+}
+
+ConditionValue bool(): {
+  ConditionValue left = null;
+  ConditionValue right = null;
+  ConditionValue result = null;
+  Token tk = null;
+}
+{
+  left = andBool()
+  {
+    result = left;
+  }
+  (
+    tk = < OR >
+    { left.backpatchFalseChain(QTInfo.size+1); }
+    right = andBool()
+    {
+      result = right;
+      Iterator<QTInfo>itr = left.trueChain.iterator();
+      while( itr.hasNext()) {
+        result.mergeTrue(itr.next());
+      }
+      left = result;
+    }
+  )*
+  { return result; }
+}
+
+ConditionValue andBool(): {
+  ConditionValue left;
+  ConditionValue right;
+  ConditionValue result;
+  Token tk; }
+{
+  left = Condition()
+  { result = left; }
+  (
+    tk = < AND > { left.backpatchTrueChain(QTInfo.size+1); }
+    right = Condition()
+    {
+      result = right;
+      Iterator<QTInfo> itr = left.falseChain.iterator();
+      while(itr.hasNext()) {
+        result.mergeFalse(itr.next());
+      }
+      left = result;
+    }
+  )*
+  { return result; }
+}
+
+/* 处理条件 */
+ConditionValue Condition():{
+  ConditionValue cValue = null;
+  String left = null;
+  String right = null;
+  Token tk = null;
+}
+{
+  left = Expression()
+  (
+    (
+      tk = < EQ >
+      | tk = < LT >
+      | tk = < LE >
+      | tk = < GT >
+      | tk = < GE >
+      | tk = < NE >)
+    right = Expression()
+  )?
+  {
+    cValue = new ConditionValue();
+    if (tk == null) {
+      QTInfo qt1 = new QTInfo("Jnz", left, "_", 0);
+      qtList.addQTInfo(qt1);
+      cValue.mergeTrue(qt1);
+    }else {
+      QTInfo qt1 = new QTInfo("J" + tk.image, left, right, 0);
+      qtList.addQTInfo(qt1);
+      cValue.mergeTrue(qt1);
+    }
+    QTInfo qt2 = new QTInfo("J", "_", "_", 0);
+    qtList.addQTInfo(qt2);
+    cValue.mergeFalse(qt2);
+    return cValue;
+  }
+}
+
+/* 处理表达式 */
+String Expression():{
+  String result;
+}
+{
+  result = AdditiveExpression()
+  {
+    return result;
+  }
+}
+/* 处理表达式 */
+String AdditiveExpression():{
+  String left = null;
+  String right = null;
+  String result = null;
+  Token tk = null;
+}
+{
+  left = MultiplicativeExpression()
+  {
+    result = left;
+  }
+  (
+    (tk = < PLUS >
+    | tk = < MINUS >)
+    right = MultiplicativeExpression()
+    {
+      result = VariableNameGenerator.genVariableName();
+      QTInfo qt = new QTInfo(tk.image, left, right, result);
+      qtList.addQTInfo(qt);
+      left = result;
+    }
+  )*
+  {
+    return result;
+  }
+}
+
+/* 处理项 */
+String MultiplicativeExpression():{
+  String left = null;
+  String right = null;
+  String result = null;
+  Token tk = null;
+}
+{
+  left = UnaryExpression()
+  {
+    result = left;
+  }
+  (
+    (tk = < MULTIPLY >
+    | tk = < DIVIDE >
+    | tk = "%")
+    right = UnaryExpression()
+    {
+      result = VariableNameGenerator.genVariableName();
+      QTInfo qt = new QTInfo(tk.image, left, right, result);
+      qtList.addQTInfo(qt);
+      left = result;
+    }
+  )*
+  {
+    return result;
+  }
+}
+
+/* 处理因子 */
+String UnaryExpression():{
+  String result = null;
+}
+{
+  (
+    < LP > result = Expression() < RP >
+    | result = Identifier()
+    | result = Integer()
+  )
+  {
+    return result;
+  }
+}
+
+/* 处理标识符 */
+String Identifier() :{
+  Token tk;
+}
+{
+  tk = < IDENTIFIER >
+  {
+    return tk.image;
+  }
+}
+
+/* 处理数 */
+String Integer() :{
+  Token tk;
+}
+{
+  tk = < CONSTANT >
+  {
+    return tk.image;
+  }
+}
